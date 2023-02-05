@@ -118,9 +118,9 @@ xhat_1 <- map$NAME
 xhat_5 <- map$NAME
 xhat_9 <- map$NAME
 for (i in 1:21) {
-  xhat_1 <- cbind(xhat_1, quantile_filter(SIR[i], L, 20, 0.1))
-  xhat_5 <- cbind(xhat_5, quantile_filter(SIR[i], L, 20, 0.5))
-  xhat_9 <- cbind(xhat_9, quantile_filter(SIR[i], L, 20, 0.9))
+  xhat_1 <- cbind(xhat_1, quantile_filter(SIR[i], L, 1, 0.1))
+  xhat_5 <- cbind(xhat_5, quantile_filter(SIR[i], L, 1, 0.5))
+  xhat_9 <- cbind(xhat_9, quantile_filter(SIR[i], L, 1, 0.9))
 }
 colnames(xhat_1) <- c("county","xhat.1.SIR.1968","xhat.1.SIR.1969","xhat.1.SIR.1970","xhat.1.SIR.1971","xhat.1.SIR.1972","xhat.1.SIR.1973",
                       "xhat.1.SIR.1974","xhat.1.SIR.1975","xhat.1.SIR.1976","xhat.1.SIR.1977","xhat.1.SIR.1978","xhat.1.SIR.1979",
@@ -254,26 +254,81 @@ names(Att.labs) <- c("0.1",
 ggplot(map88_sf) + geom_sf(aes(fill = SIR)) +
   facet_wrap(~tau, dir = "h", ncol = 3,
              labeller = labeller(tau = Att.labs)) +
-  ggtitle("1988's SIR of Lung cancer in Ohio") + theme_bw() +
+  ggtitle("1988's SIR of Lung cancer in Ohio") + theme_void() +
   theme(
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank()
   ) +
   scale_fill_gradient2(
-    midpoint = 1, low = "blue", mid = "white", high = "red"
+    midpoint = 1, low = "chartreuse4", mid = "white", high = "firebrick1"
   )
 
 # normal graph of 1988
 map88_lc_sf <- map_sf %>%
   filter(year == 1988)
 ggplot(map_sf) + geom_sf(aes(fill = SIR)) +
-  ggtitle("1988's SIR of Lung cancer in Ohio") + theme_bw() +
+  ggtitle("1988's SIR of Lung cancer in Ohio") + theme_void() +
   theme(
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank()
   ) +
   scale_fill_gradient2(
-    midpoint = 1, low = "blue", mid = "white", high = "red"
+    midpoint = 1, low = "chartreuse4", mid = "white", high = "firebrick1"
   )
+
+# residual error
+map88_1_re <- map88_1_sf %>%
+  mutate(ita = map88_lc_sf$SIR - .$SIR)
+map88_5_re <- map88_5_sf %>%
+  mutate(ita = map88_lc_sf$SIR - .$SIR)
+map88_9_re <- map88_9_sf %>%
+  mutate(ita = map88_lc_sf$SIR - .$SIR)
+for (i in 1:88) {
+  if (map88_1_re$ita[i]<0) {
+    map88_1_re$ita[i] = -1
+  }else if (map88_1_re$ita[i]>0){
+    map88_1_re$ita[i] = 1
+  }
+}
+for (i in 1:88) {
+  if (map88_5_re$ita[i]<0) {
+    map88_5_re$ita[i] = -1
+  }else if (map88_5_re$ita[i]>0){
+    map88_5_re$ita[i] = 1
+  }
+}
+for (i in 1:88) {
+  if (map88_9_re$ita[i]<0) {
+    map88_9_re$ita[i] = -1
+  }else if (map88_9_re$ita[i]>0){
+    map88_9_re$ita[i] = 1
+  }
+}
+map88_re <- rbind(map88_1_re, map88_5_re, map88_9_re)
+Att.labs <- c("tau = 0.1",
+              "tau = 0.5",
+              "tau = 0.9")
+names(Att.labs) <- c("0.1",
+                     "0.5",
+                     "0.9")
+
+ggplot(map88_re) + geom_sf(aes(fill = ita)) +
+  facet_wrap(~tau, dir = "h", ncol = 3,
+             labeller = labeller(tau = Att.labs)) +
+  ggtitle("Ita") + theme_void() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  scale_fill_gradient2(
+    midpoint = 0, low = "lightskyblue1", mid = "cadetblue", high = "royalblue1"
+  )
+
+
+# average
+summary(map88_1_sf$SIR)
+summary(map88_5_sf$SIR)
+summary(map88_9_sf$SIR)
